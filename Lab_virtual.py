@@ -1,19 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import subprocess
-import sys
-
-# Instalar matplotlib si no está disponible
-try:
-    import matplotlib.pyplot as plt
-    from scipy import stats
-except ImportError:
-    st.warning("Instalando dependencias necesarias...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "matplotlib", "scipy"])
-    import matplotlib.pyplot as plt
-    from scipy import stats
-
+import matplotlib.pyplot as plt
+from scipy import stats
 import random
 
 # Configuración de matplotlib para compatibilidad con Streamlit
@@ -551,7 +540,7 @@ with st.expander("🧪 Información Adicional sobre la Metodología"):
     
     4. **Medición en AAS:**
        - Longitud de onda: 248.3 nm
-       - Llama: Aire-Acetileno
+       - Llame: Aire-Acetileno
        - Altura de llama: 8 mm
        - Corregir por blanco apropiado
     
