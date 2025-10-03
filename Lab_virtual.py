@@ -1,13 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy import stats
 import random
-
-# Configuración de matplotlib para compatibilidad con Streamlit
-plt.rcParams['font.family'] = 'DejaVu Sans'
-plt.rcParams['axes.unicode_minus'] = False
 
 # Configuración de la página
 st.set_page_config(
@@ -298,14 +292,25 @@ with col2:
                 abs_medida = max(0, abs_teorica + ruido)
                 absorbancias_medidas.append(abs_medida)
             
-            # Realizar regresión lineal
-            try:
-                slope, intercept, r_value, p_value, std_err = stats.linregress(concentraciones_reales, absorbancias_medidas)
-            except:
-                # Fallback si hay problemas con scipy
+            # Realizar regresión lineal manual
+            n = len(concentraciones_reales)
+            if n > 0:
+                x = np.array(concentraciones_reales)
+                y = np.array(absorbancias_medidas)
+                
+                # Calcular pendiente e intercepto manualmente
+                slope = np.cov(x, y, bias=True)[0,1] / np.var(x) if np.var(x) > 0 else sensibilidad
+                intercept = np.mean(y) - slope * np.mean(x)
+                
+                # Calcular R² manualmente
+                y_pred = slope * x + intercept
+                ss_res = np.sum((y - y_pred)**2)
+                ss_tot = np.sum((y - np.mean(y))**2)
+                r_cuadrado = 1 - (ss_res / ss_tot) if ss_tot > 0 else 0.999
+            else:
                 slope = sensibilidad
                 intercept = 0
-                r_value = 0.999
+                r_cuadrado = 0.999
             
             # Calcular absorbancia de la muestra
             absorbancia_muestra_teorica = sensibilidad * concentracion_esperada_muestra
@@ -331,7 +336,7 @@ with col2:
                 "absorbancias_medidas": absorbancias_medidas,
                 "pendiente": slope,
                 "intercepto": intercept,
-                "r_cuadrado": r_value**2,
+                "r_cuadrado": r_cuadrado,
                 "absorbancia_muestra": absorbancia_muestra,
                 "concentracion_muestra": concentracion_muestra,
                 "concentracion_vino": concentracion_vino,
@@ -356,35 +361,38 @@ if st.session_state.calibracion_realizada and st.session_state.resultados:
     resultados = st.session_state.resultados
     parametros = st.session_state.parametros_instrumento
     
-    # Mostrar curva de calibración
+    # Mostrar resultados en columnas
     col_res1, col_res2 = st.columns([2, 1])
     
     with col_res1:
-        st.subheader("Curva de Calibración")
+        st.subheader("Curva de Calibración - Datos")
         
-        # Crear gráfico
-        fig, ax = plt.subplots(figsize=(10, 6))
+        # Mostrar tabla de datos de calibración
+        datos_curva = {
+            "Solución": [f"Std {i+1}" for i in range(len(resultados["concentraciones_reales"]))],
+            "Conc. Fe (mg/L)": [f"{c:.3f}" for c in resultados["concentraciones_reales"]],
+            "Absorbancia": [f"{a:.4f}" for a in resultados["absorbancias_medidas"]]
+        }
+        df_curva = pd.DataFrame(datos_curva)
+        st.dataframe(df_curva, use_container_width=True)
         
-        # Puntos experimentales
-        ax.scatter(resultados["concentraciones_reales"], resultados["absorbancias_medidas"], 
-                  color='blue', s=50, zorder=5, label='Datos experimentales')
+        # Mostrar representación visual simple de la curva
+        st.subheader("Representación de la Curva")
         
-        # Línea de regresión
-        x_fit = np.linspace(0, max(resultados["concentraciones_reales"]) * 1.1, 100)
-        y_fit = resultados["pendiente"] * x_fit + resultados["intercepto"]
-        ax.plot(x_fit, y_fit, 'r-', label=f'Regresión lineal (R² = {resultados["r_cuadrado"]:.4f})')
+        # Crear una representación textual simple de la curva
+        st.write("**Ecuación de la recta:**")
+        st.code(f"A = {resultados['pendiente']:.4f} × C + {resultados['intercepto']:.4f}")
         
-        # Punto de la muestra
-        ax.scatter([resultados["concentracion_muestra"]], [resultados["absorbancia_muestra"]], 
-                  color='green', s=100, zorder=6, label='Muestra de vino')
+        # Mostrar puntos clave de la curva
+        st.write("**Puntos clave de la curva:**")
+        col_curve1, col_curve2, col_curve3 = st.columns(3)
         
-        ax.set_xlabel('Concentración de Fe (mg/L)')
-        ax.set_ylabel('Absorbancia')
-        ax.set_title('Curva de Calibración - Hierro por AAS')
-        ax.grid(True, alpha=0.3)
-        ax.legend()
-        
-        st.pyplot(fig)
+        with col_curve1:
+            st.metric("Mínimo", f"{min(resultados['absorbancias_medidas']):.4f}")
+        with col_curve2:
+            st.metric("Máximo", f"{max(resultados['absorbancias_medidas']):.4f}")
+        with col_curve3:
+            st.metric("Pendiente", f"{resultados['pendiente']:.4f}")
     
     with col_res2:
         st.subheader("Resultados Cuantitativos")
@@ -540,7 +548,7 @@ with st.expander("🧪 Información Adicional sobre la Metodología"):
     
     4. **Medición en AAS:**
        - Longitud de onda: 248.3 nm
-       - Llame: Aire-Acetileno
+       - Llama: Aire-Acetileno
        - Altura de llama: 8 mm
        - Corregir por blanco apropiado
     
