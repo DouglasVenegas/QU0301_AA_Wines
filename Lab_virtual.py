@@ -80,9 +80,12 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         
         🔬 **Principio básico:** 
         La absorción atómica se basa en que los átomos en estado fundamental pueden absorber luz únicamente a longitudes de onda específicas, correspondientes a la energía necesaria para que un electrón pase de un nivel energético más bajo a uno más alto. Cada elemento tiene una estructura electrónica única, por lo que las diferencias de energía entre sus niveles son características y determinan las longitudes de onda que puede absorber. Cuando la radiación incidente coincide con estas diferencias de energía, el electrón se excita, absorbiendo la luz; si no coincide, la radiación atraviesa el átomo sin interacción. Este principio permite identificar y cuantificar elementos mediante espectroscopía de absorción atómica.
-        
-        📊 **Ley de Beer-Lambert:**
-        A = ε × b × C
+
+        ** Instrumentación:**
+        El equipo de absorción atómica de llama utiliza el mismo principio de absorción atómica, pero los átomos de la muestra se generan en fase gaseosa mediante una llama. La muestra, generalmente en forma de solución, se introduce en un **nebulizador**, que la transforma en un aerosol fino. Este aerosol se transporta a la llama, donde el calor descompone el compuesto y produce átomos libres en estado fundamental. Un **fuente de luz** específica del elemento de interés emite radiación a la longitud de onda característica, que atraviesa la llama y es parcialmente absorbida por los átomos presentes. Un **detector** mide la disminución de la intensidad de la luz, lo que permite identificar y cuantificar el elemento, ya que la absorbancia es proporcional a su concentración según la Ley de Beer-Lambert.
+
+        📊 **Identificación y cuantificación de analitos:**
+        La identificación y cuantificación de elementos aprovecha el principio de absorción atómica explicado antes: como cada átomo absorbe luz únicamente a longitudes de onda específicas, al exponer una muestra a esa radiación, solo los átomos del elemento correspondiente absorberán luz. Midiendo la cantidad de luz absorbida, se puede confirmar la presencia del elemento (identificación) y, mediante la relación entre absorbancia y concentración establecida por la Ley de Beer-Lambert, determinar la cantidad presente en la muestra (cuantificación).
         
         ⚗️ **Para hierro (Fe):**
         - Longitud de onda óptima: 248.3 nm
