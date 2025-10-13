@@ -73,6 +73,7 @@ if 'volumen_pipeteado' not in st.session_state:
 # Información sobre la técnica
 with st.expander("📚 Información sobre la técnica AAS", expanded=False):
     col_info1, col_info2 = st.columns(2)
+    
     with col_info1:
         st.markdown("""
         **Espectrofotometría de Absorción Atómica (AAS)**
@@ -88,16 +89,15 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         - Límite de detección: 0.01-0.1 mg/L
         - Rango lineal: 0.1-10 mg/L
         """)
-    with col_info2:
-    # Primera imagen
-    st.image("datos/Energy_Fiagram.jpg", 
-            caption="Diagrama de energía en espectroscopía atómica",
-            use_container_width=True)
     
-    # Segunda imagen
-    st.image("datos/Instrument.webp", 
-            caption="Esquema de equipo de Absorción Atómica",
-            use_container_width=True)
+    with col_info2:
+        st.image("datos/Energy_Fiagram.jpg", 
+                caption="Diagrama de energía en espectroscopía atómica",
+                use_container_width=True)
+        
+        st.image("datos/Instrument.webp", 
+                caption="Esquema de equipo de Absorción Atómica",
+                use_container_width=True))
 
 # SECCIÓN 1: SELECCIÓN DE MUESTRA CON IMÁGENES
 st.header("1. 🍷 Selección de Muestra de Vino")
