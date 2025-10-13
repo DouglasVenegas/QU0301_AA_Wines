@@ -90,7 +90,11 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         """)
     with col_info2:
         st.image("datos/Energy_Fiagram.jpg", 
-                caption="Esquema de un espectrómetro de absorción atómica",
+                caption="Diagrama de energía en espectroscopía atómica",
+            use_container_width=True)
+        
+            st.image("https://datos/Instrument.webp", 
+            caption="Esquema de equipo de Absorción Atómica",
             use_container_width=True)
 
 # SECCIÓN 1: SELECCIÓN DE MUESTRA CON IMÁGENES
