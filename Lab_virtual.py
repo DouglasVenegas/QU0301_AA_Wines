@@ -89,8 +89,9 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         - Rango lineal: 0.1-10 mg/L
         """)
     with col_info2:
-        st.image("https://via.placeholder.com/400x200/4B8BBE/FFFFFF?text=Esquema+AAS", 
-                caption="Esquema de un espectrómetro de absorción atómica")
+        st.image("datos/Energy_Fiagram.jpg", 
+                caption="Esquema de un espectrómetro de absorción atómica",
+            use_container_width=True)
 
 # SECCIÓN 1: SELECCIÓN DE MUESTRA CON IMÁGENES
 st.header("1. 🍷 Selección de Muestra de Vino")
