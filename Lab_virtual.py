@@ -79,7 +79,7 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         **Espectrofotometría de Absorción Atómica (AAS)**
         
         🔬 **Principio básico:** 
-        Los átomos en estado fundamental absorben luz a longitudes de onda específicas
+        La absorción atómica se basa en que los átomos en estado fundamental pueden absorber luz únicamente a longitudes de onda específicas, correspondientes a la energía necesaria para que un electrón pase de un nivel energético más bajo a uno más alto. Cada elemento tiene una estructura electrónica única, por lo que las diferencias de energía entre sus niveles son características y determinan las longitudes de onda que puede absorber. Cuando la radiación incidente coincide con estas diferencias de energía, el electrón se excita, absorbiendo la luz; si no coincide, la radiación atraviesa el átomo sin interacción. Este principio permite identificar y cuantificar elementos mediante espectroscopía de absorción atómica.
         
         📊 **Ley de Beer-Lambert:**
         A = ε × b × C
