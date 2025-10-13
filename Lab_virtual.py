@@ -89,11 +89,13 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         - Rango lineal: 0.1-10 mg/L
         """)
     with col_info2:
-        st.image("datos/Energy_Fiagram.jpg", 
-                caption="Diagrama de energía en espectroscopía atómica",
+    # Primera imagen
+    st.image("datos/Energy_Fiagram.jpg", 
+            caption="Diagrama de energía en espectroscopía atómica",
             use_container_width=True)
-        
-            st.image("https://datos/Instrument.webp", 
+    
+    # Segunda imagen
+    st.image("datos/Instrument.webp", 
             caption="Esquema de equipo de Absorción Atómica",
             use_container_width=True)
 
