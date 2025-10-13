@@ -97,7 +97,7 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         
         st.image("datos/Instrument.webp", 
                 caption="Esquema de equipo de Absorción Atómica",
-                use_container_width=True))
+                use_container_width=True)
 
 # SECCIÓN 1: SELECCIÓN DE MUESTRA CON IMÁGENES
 st.header("1. 🍷 Selección de Muestra de Vino")
