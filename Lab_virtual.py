@@ -138,10 +138,9 @@ vinos = {
 cols = st.columns(4)
 for i, (vino_nombre, info) in enumerate(vinos.items()):
     with cols[i]:
+        st.image(info['imagen'], use_container_width=True)
         st.markdown(f"""
-        <div style='border: 2px solid {info["color"]}; border-radius: 10px; padding: 15px; text-align: center; 
-                    background-color: {"#e6f3ff" if st.session_state.get('vino_seleccionado') == vino_nombre else "white"};'>
-            <div style='font-size: 3rem;'>{info['imagen']}</div>
+        <div style='border: 2px solid {info["color"]}; border-radius: 10px; padding: 10px; text-align: center;'>
             <h4>{vino_nombre.split(' ')[0]}</h4>
             <p style='font-size: 0.8em; color: #666;'>{info['descripcion']}</p>
         </div>
@@ -150,6 +149,7 @@ for i, (vino_nombre, info) in enumerate(vinos.items()):
         if st.button(f"Seleccionar {vino_nombre.split(' ')[0]}", key=f"btn_{i}"):
             st.session_state.vino_seleccionado = vino_nombre
             st.rerun()
+
 
 if 'vino_seleccionado' in st.session_state:
     vino_info = vinos[st.session_state.vino_seleccionado]
