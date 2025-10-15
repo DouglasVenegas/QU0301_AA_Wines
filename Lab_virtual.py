@@ -154,8 +154,6 @@ vinos = {
     }
 }
 
-st.image(info['imagen'], use_container_width=True)
-
 
 # Mostrar vinos como tarjetas seleccionables
 cols = st.columns(4)
