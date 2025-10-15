@@ -143,7 +143,14 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
         show_image("datos/Instrument.webp", caption="Esquema de equipo de Absorción Atómica")
 
 # --- SECCIÓN 1: Selección de muestra ---
-st.header("1. 🍷 Selección de Muestra de Vino")
+st.markdown(
+    """
+    <h2 style='color:#007BFF; font-weight:bold; font-size:2rem;'>
+        Parte 1. Selección de Muestra de Vino 🍷
+    </h2>
+    """,
+    unsafe_allow_html=True
+)
 cols = st.columns(4)
 for i, (vino_nombre, info) in enumerate(vinos.items()):
     with cols[i]:
