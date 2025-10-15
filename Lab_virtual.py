@@ -105,7 +105,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-header">🍷 Laboratorio Virtual - Determinación de Hierro en Vinos por AAS</div>', unsafe_allow_html=True)
+st.markdown(
+    """
+    <h1 style='font-size:3.5rem; font-weight:bold; color:#000000; text-align:center; margin-bottom:2rem;'>
+        🍷 Laboratorio Virtual - Determinación de Hierro en Vinos por AAS
+    </h1>
+    """,
+    unsafe_allow_html=True
+)
 st.markdown("---")
 
 # --- Estado ---
@@ -145,8 +152,8 @@ with st.expander("📚 Información sobre la técnica AAS", expanded=False):
 # --- SECCIÓN 1: Selección de muestra ---
 st.markdown(
     """
-    <h2 style='color:#007BFF; font-weight:bold; font-size:2rem;'>
-        Parte 1. Selección de Muestra de Vino 🍷
+    <h2 style='color:#458B74; font-weight:bold; font-size:2rem;'>
+        Parte I. Selección de Muestra de Vino 🍷
     </h2>
     """,
     unsafe_allow_html=True
