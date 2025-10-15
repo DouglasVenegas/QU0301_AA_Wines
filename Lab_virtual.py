@@ -107,7 +107,7 @@ st.markdown("""
 
 st.markdown(
     """
-    <h1 style='font-size:3.5rem; font-weight:bold; color:#000000; text-align:center; margin-bottom:2rem;'>
+    <h1 style='font-size:4.5rem; font-weight:bold; color:#8B0A50; text-align:center; margin-bottom:2rem;'>
         🍷 Laboratorio Virtual - Determinación de Hierro en Vinos por AAS
     </h1>
     """,
