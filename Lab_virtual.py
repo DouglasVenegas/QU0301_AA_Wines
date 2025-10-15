@@ -38,7 +38,9 @@ def show_image(path, caption=None, use_container_width=True):
             font = ImageFont.load_default()
         except Exception:
             font = None
-        w, h = draw.textsize(text, font=font)
+        bbox = draw.textbbox((0, 0), text, font=font)
+        w = bbox[2] - bbox[0]
+        h = bbox[3] - bbox[1]
         draw.text(((800 - w) / 2, (500 - h) / 2), text, fill=(100, 100, 100), font=font)
     if caption:
         st.image(img, caption=caption, use_container_width=use_container_width)
