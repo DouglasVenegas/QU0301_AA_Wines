@@ -176,40 +176,62 @@ if 'vino_seleccionado' in st.session_state:
     vino_info = vinos[st.session_state.vino_seleccionado]
     st.success(f"✅ **Muestra seleccionada:** {st.session_state.vino_seleccionado} — Hierro referencia: {vino_info['hierro_real']} mg/L")
 
-# --- SECCIÓN 2: Simulador de balanza ---
+# # --- SECCIÓN 2: Simulador de balanza ---
 st.header("2. ⚖️ Simulador de Balanza Analítica")
+
+# Visualización del equipo
+col_equipo1, col_equipo2 = st.columns([1, 1])
+with col_equipo1:
+    show_image("datos/Vidrioreloj.png", caption="Vidrio de reloj con Sal de Mohr", use_container_width=True)
+with col_equipo2:
+    show_image("datos/balanza_analitica.jpg", caption="Balanza analítica de precisión", use_container_width=True)
+
+st.markdown("---")
+
 col_balance1, col_balance2 = st.columns([2, 1])
 
 with col_balance1:
     st.subheader("🔧 Pesada de Sal de Mohr")
     st.markdown("""
     **Instrucciones:**
-    1. Coloque el vidrio de reloj en la balanza
-    2. Tara la balanza (botón 'Tara')
-    3. Agregue Sal de Mohr gradualmente
-    4. Intente alcanzar 0.7020 g ± 0.0010 g
+    1. Tara la balanza (botón 'Tara')
+    2. Agregue Sal de Mohr gradualmente usando los controles
+    3. Pese la cantidad deseada (rango permitido: 0.2 - 5.0 g)
     """)
+    
     col_controls1, col_controls2, col_controls3 = st.columns(3)
     with col_controls1:
         if st.button("⚖️ Tara (Cero)", use_container_width=True):
             st.session_state.peso_actual = 0.0000
     with col_controls2:
-        agregar_peso = st.slider("Agregar Sal de Mohr (mg)", 0, 50, 10, key="agregar_sal")
+        agregar_peso = st.slider("Agregar Sal de Mohr (mg)", 0, 100, 10, key="agregar_sal")
     with col_controls3:
         if st.button("➕ Agregar", use_container_width=True):
-            st.session_state.peso_actual += agregar_peso / 1000.0
+            nuevo_peso = st.session_state.peso_actual + agregar_peso / 1000.0
+            if nuevo_peso <= 5.0:
+                st.session_state.peso_actual = nuevo_peso
+            else:
+                st.error("⚠️ Peso máximo: 5.0 g")
 
 with col_balance2:
     st.markdown('<div class="balance-display">', unsafe_allow_html=True)
     st.markdown("### BALANZA ANALÍTICA")
     st.markdown(f"# {st.session_state.peso_actual:.4f} g")
-    diferencia = abs(st.session_state.peso_actual - 0.7020)
-    if diferencia <= 0.0010:
-        st.success("✅ Peso óptimo")
-    elif diferencia <= 0.0020:
-        st.warning("⚠️ Peso aceptable")
-    else:
-        st.error("❌ Fuera de rango")
+    
+    # Indicadores de calidad del peso
+    if st.session_state.peso_actual < 0.2 and st.session_state.peso_actual > 0:
+        st.warning("⚠️ Peso muy bajo")
+    elif st.session_state.peso_actual >= 0.2 and st.session_state.peso_actual <= 5.0:
+        diferencia = abs(st.session_state.peso_actual - 0.7020)
+        if diferencia <= 0.0010:
+            st.success("✅ Peso óptimo (recomendado)")
+        elif diferencia <= 0.0020:
+            st.info("✓ Peso aceptable")
+        else:
+            st.info("✓ Peso válido")
+    elif st.session_state.peso_actual > 5.0:
+        st.error("❌ Excede límite máximo")
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 # --- SECCIÓN 3: Preparación de soluciones ---
