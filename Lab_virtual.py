@@ -18,12 +18,33 @@ def get_base64_image(image_path):
         return base64.b64encode(img_file.read()).decode()
 
 # Imágenes base64 para los vinos (puedes reemplazar estas con tus propias imágenes)
-WINE_IMAGES = {
-    "Tinto": "datos/Download.jpg",
-    "Blanco": "datos/White_Wine.jpg",
-    "Rosado": "datos/Rose_Wine.webp",
-    "Espumante": "sparkling_Wine.webp"
+vinos = {
+    "Tinto (Cabernet Sauvignon)": {
+        "imagen": "datos/Download.jpg",
+        "descripcion": "Vino tinto con cuerpo, envejecido en barrica.",
+        "hierro_real": 3.25,
+        "color": "#8B0000"
+    },
+    "Blanco (Chardonnay)": {
+        "imagen": "datos/White_Wine.jpg",
+        "descripcion": "Vino blanco seco, frutado, de fermentación controlada.",
+        "hierro_real": 1.85,
+        "color": "#F5DEB3"
+    },
+    "Rosado (Garnacha)": {
+        "imagen": "datos/Rose_Wine.webp",
+        "descripcion": "Vino rosado fresco, con notas florales.",
+        "hierro_real": 2.10,
+        "color": "#FF69B4"
+    },
+    "Espumante (Cava)": {
+        "imagen": "datos/sparkling_Wine.webp",
+        "descripcion": "Vino espumoso tradicional, segunda fermentación en botella.",
+        "hierro_real": 2.65,
+        "color": "#DAA520"
+    }
 }
+
 
 # Título principal con estilo mejorado
 st.markdown("""
