@@ -177,7 +177,14 @@ if 'vino_seleccionado' in st.session_state:
     st.success(f"✅ **Muestra seleccionada:** {st.session_state.vino_seleccionado} — Hierro referencia: {vino_info['hierro_real']} mg/L")
 
 # # --- SECCIÓN 2: Simulador de balanza ---
-st.header("2. ⚖️ Simulador de Balanza Analítica")
+st.markdown(
+    """
+    <h2 style='color:#458B74; font-weight:bold; font-size:2rem;'>
+        Parte II. ⚖️ Simulador de Balanza Analítica�
+    </h2>
+    """,
+    unsafe_allow_html=True
+)
 
 # Visualización del equipo
 col_equipo1, col_equipo2 = st.columns([1, 1])
