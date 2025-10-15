@@ -19,10 +19,10 @@ def get_base64_image(image_path):
 
 # Imágenes base64 para los vinos (puedes reemplazar estas con tus propias imágenes)
 WINE_IMAGES = {
-    "Tinto": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
-    "Blanco": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADgQGBAZnD1QAAAABJRU5ErkJggg==",
-    "Rosado": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+O/4PwAGIwMfLr0UJAAAAABJRU5ErkJggg==",
-    "Espumante": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+O/4PwAGIwMfLr0UJAAAAABJRU5ErkJggg=="
+    "Tinto": "datos/Download.jpg",
+    "Blanco": "datos/White_Wine.jpg",
+    "Rosado": "datos/Rose_Wine.webp",
+    "Espumante": "sparkling_Wine.webp"
 }
 
 # Título principal con estilo mejorado
