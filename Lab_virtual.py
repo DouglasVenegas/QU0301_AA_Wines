@@ -107,31 +107,13 @@ st.header("1. 🍷 Selección de Muestra de Vino")
 
 # Tipos de vino con imágenes y descripciones
 vinos = {
-    "Tinto (Cabernet Sauvignon)": {
-        "hierro_real": 4.2, 
-        "color": "#722F37",
-        "imagen": "datos/Download.jpg",
-        "descripcion": "Vino tinto robusto con notas de cassis y pimienta"
-    },
-    "Blanco (Chardonnay)": {
-        "hierro_real": 1.8, 
-        "color": "#F3E4AB",
-        "imagen": "datos/White_Wine.jpg",
-        "descripcion": "Vino blanco seco con aromas cítricos y tropicales"
-    },
-    "Rosado (Garnacha)": {
-        "hierro_real": 2.5, 
-        "color": "#E8ADAA",
-        "imagen": "datos/Rose_Wine.webp",
-        "descripcion": "Vino rosado fresco con notas de frutos rojos"
-    },
-    "Espumante (Cava)": {
-        "hierro_real": 1.2, 
-        "color": "#F5F5DC",
-        "imagen": "datos/sparkling_Wine.webp",
-        "descripcion": "Vino espumante seco con burbujas finas"
-    }
+    "Tinto (Cabernet Sauvignon)": {"imagen": "datos/Download.jpg", ...},
+    "Blanco (Chardonnay)": {"imagen": "datos/White_Wine.jpg", ...},
+    "Rosado (Garnacha)": {"imagen": "datos/Rose_Wine.webp", ...},
+    "Espumante (Cava)": {"imagen": "datos/sparkling_Wine.webp", ...}
 }
+
+st.image(info['imagen'], use_container_width=True)
 
 
 # Mostrar vinos como tarjetas seleccionables
