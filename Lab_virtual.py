@@ -110,28 +110,29 @@ vinos = {
     "Tinto (Cabernet Sauvignon)": {
         "hierro_real": 4.2, 
         "color": "#722F37",
-        "imagen": "🍷",
+        "imagen": "datos/Download.jpg",
         "descripcion": "Vino tinto robusto con notas de cassis y pimienta"
     },
     "Blanco (Chardonnay)": {
         "hierro_real": 1.8, 
         "color": "#F3E4AB",
-        "imagen": "🥂",
+        "imagen": "datos/White_Wine.jpg",
         "descripcion": "Vino blanco seco con aromas cítricos y tropicales"
     },
     "Rosado (Garnacha)": {
         "hierro_real": 2.5, 
         "color": "#E8ADAA",
-        "imagen": "🍑",
+        "imagen": "datos/Rose_Wine.webp",
         "descripcion": "Vino rosado fresco con notas de frutos rojos"
     },
     "Espumante (Cava)": {
         "hierro_real": 1.2, 
         "color": "#F5F5DC",
-        "imagen": "🫧",
+        "imagen": "datos/sparkling_Wine.webp",
         "descripcion": "Vino espumante seco con burbujas finas"
     }
 }
+
 
 # Mostrar vinos como tarjetas seleccionables
 cols = st.columns(4)
