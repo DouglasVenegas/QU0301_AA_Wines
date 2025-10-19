@@ -661,7 +661,7 @@ def guardar_simulador():
     """Guarda el simulador en un archivo temporal y lo retorna"""
     try:
         with tempfile.NamedTemporaryFile('w', delete=False, suffix='.html', 
-                                        encoding='utf-8', mode='w') as f:
+                                        encoding='utf-8') as f:
             f.write(SIMULADOR_HTML)
             return f.name
     except Exception as e:
