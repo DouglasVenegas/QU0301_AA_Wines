@@ -24,7 +24,7 @@ def mostrar_patron_madre():
     
     with col1:
         st.markdown("**🎯 Vidrio de Reloj**")
-        vidrio_en_balanza = st.checkbox("Colocar en balanza", value=True)
+        vidrio_en_balanza = st.checkbox("Colocar en balanza", value=True, key="vidrio_balanza")
         if vidrio_en_balanza:
             st.success("✅ En balanza")
         else:
@@ -32,7 +32,7 @@ def mostrar_patron_madre():
     
     with col2:
         st.markdown("**🥄 Espátula**")
-        espátula_en_frasco = st.checkbox("En frasco de sal", value=True)
+        espátula_en_frasco = st.checkbox("En frasco de sal", value=True, key="espatula_frasco")
         if espátula_en_frasco:
             st.success("✅ Con sal")
         else:
@@ -47,7 +47,8 @@ def mostrar_patron_madre():
                 max_value=5.00, 
                 value=2.50, 
                 step=0.01,
-                help="Simula el pesado de Sal de Mohr"
+                help="Simula el pesado de Sal de Mohr",
+                key="masa_simulada"
             )
             st.info(f"⚖️ Masa actual: **{masa_simulada:.2f} g**")
         else:
@@ -74,7 +75,7 @@ def mostrar_patron_madre():
         """, unsafe_allow_html=True)
         
         # Botón para confirmar pesado
-        if st.button("✅ Confirmar Pesado", type="primary"):
+        if st.button("✅ Confirmar Pesado", type="primary", key="confirmar_pesado"):
             st.session_state.masa_sal_mohr = masa_simulada
             st.success(f"✅ Masa confirmada: {masa_simulada:.2f} g")
             st.balloons()
@@ -83,7 +84,7 @@ def mostrar_patron_madre():
     
     st.markdown("---")
     
-    # Sección de aforo (se mantiene igual)
+    # Sección de aforo
     st.markdown("### 🧪 Aforo del Patrón Madre")
     
     col1, col2 = st.columns(2)
@@ -104,7 +105,8 @@ def mostrar_patron_madre():
                 value=None,
                 step=0.0001,
                 format="%.4f",
-                help="Ingresa la masa del simulador o directamente"
+                help="Ingresa la masa del simulador o directamente",
+                key="masa_manual"
             )
     
     with col2:
@@ -112,27 +114,30 @@ def mostrar_patron_madre():
         volumen_balon = st.selectbox(
             "Volumen del balón aforado (mL):",
             [None, 50, 100, 250, 500, 1000],
-            format_func=lambda x: "Seleccione..." if x is None else f"{x} mL"
+            format_func=lambda x: "Seleccione..." if x is None else f"{x} mL",
+            key="volumen_balon"
         )
         
         if volumen_balon:
             st.success(f"✅ Volumen seleccionado: {volumen_balon} mL")
             st.session_state.volumen_aforo_patron = volumen_balon
     
-    # Resto del código se mantiene igual...
-    if masa_pesada and st.session_state.volumen_aforo_patron:
+    # Cálculos
+    masa_para_calculo = st.session_state.masa_sal_mohr if st.session_state.masa_sal_mohr else masa_pesada
+    
+    if masa_para_calculo and st.session_state.volumen_aforo_patron:
         st.markdown("---")
         st.markdown("### 🧮 Cálculos Automáticos")
         
         conc_patron_madre = calcular_concentracion_patron_madre(
-            masa_pesada,
+            masa_para_calculo,
             st.session_state.volumen_aforo_patron
         )
         
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.metric("Masa Sal de Mohr", f"{masa_pesada:.4f} g")
+            st.metric("Masa Sal de Mohr", f"{masa_para_calculo:.4f} g")
         
         with col2:
             st.metric("Volumen Aforo", f"{st.session_state.volumen_aforo_patron} mL")
@@ -154,11 +159,11 @@ def mostrar_patron_madre():
         
         st.session_state.conc_patron_madre = conc_patron_madre
             
-            import webbrowser
-            import tempfile
-            import os
+import webbrowser
+import tempfile
+import os
             
-            try:
+        try:
                 with tempfile.NamedTemporaryFile('w', delete=False, suffix='.html', 
                                                 encoding='utf-8') as f:
                     f.write(SIMULADOR_PESADO)
