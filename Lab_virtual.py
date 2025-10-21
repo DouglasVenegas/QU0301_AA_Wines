@@ -9,6 +9,763 @@ def mostrar_patron_madre():
     </div>
     """, unsafe_allow_html=True)
     
+    st.markdown("### ⚖️ Paso 1: Pesado de Sal de Mohr")
+    
+    # Botón para abrir simulador
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        if st.button("🎮 Abrir Simulador de Pesado", type="primary", use_container_width=True):
+            # Crear archivo temporal con el simulador
+            SIMULADOR_PESADO = """<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Pesado - Sal de Mohr</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        const PlayIcon = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
+        );
+        
+        const PauseIcon = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+            </svg>
+        );
+        
+        const RotateIcon = () => (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+            </svg>
+        );
+
+        const SaltWeighingSimulator = () => {
+          const canvasRef = useRef(null);
+          const [watchGlassPos, setWatchGlassPos] = useState({ x: 100, y: 200 });
+          const [spatulaPos, setSpatulaPos] = useState({ x: 200, y: 150 });
+          const [isDraggingGlass, setIsDraggingGlass] = useState(false);
+          const [isDraggingSpatula, setIsDraggingSpatula] = useState(false);
+          const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+          const [mass, setMass] = useState(0);
+          const [isAdding, setIsAdding] = useState(false);
+          const [particles, setParticles] = useState([]);
+          const [isComplete, setIsComplete] = useState(false);
+          const targetMass = 5.0;
+          const minMass = 0.2;
+          const animationRef = useRef(null);
+
+          const scalePos = { x: 450, y: 420 };
+          const scaleSize = { width: 200, height: 18 };
+          const watchGlassSize = { width: 70, height: 35 };
+          const spatulaSize = { width: 80, height: 15 };
+          const bottlePos = { x: 700, y: 150 };
+
+          const isWatchGlassOnScale = () => {
+            const glassBottom = watchGlassPos.y + watchGlassSize.height;
+            const glassCenterX = watchGlassPos.x + watchGlassSize.width / 2;
+            return (
+              glassBottom >= scalePos.y - 30 &&
+              glassBottom <= scalePos.y + 30 &&
+              glassCenterX >= scalePos.x + 20 &&
+              glassCenterX <= scalePos.x + scaleSize.width - 20
+            );
+          };
+
+          const isSpatulaOverGlass = () => {
+            const spatulaTipX = spatulaPos.x;
+            const spatulaTipY = spatulaPos.y + spatulaSize.height / 2;
+            return (
+              spatulaTipX >= watchGlassPos.x &&
+              spatulaTipX <= watchGlassPos.x + watchGlassSize.width &&
+              spatulaTipY >= watchGlassPos.y &&
+              spatulaTipY <= watchGlassPos.y + watchGlassSize.height
+            );
+          };
+
+          const isSpatulaInBottle = () => {
+            const spatulaTipX = spatulaPos.x;
+            const spatulaTipY = spatulaPos.y;
+            return (
+              spatulaTipX >= bottlePos.x + 20 &&
+              spatulaTipX <= bottlePos.x + 60 &&
+              spatulaTipY >= bottlePos.y + 30 &&
+              spatulaTipY <= bottlePos.y + 100
+            );
+          };
+
+          const generateParticles = () => {
+            if (!isAdding || mass >= targetMass || !isSpatulaOverGlass() || !isWatchGlassOnScale()) return;
+            const newParticles = [];
+            for (let i = 0; i < 2; i++) {
+              newParticles.push({
+                id: Date.now() + Math.random(),
+                x: spatulaPos.x + (Math.random() - 0.5) * 20,
+                y: spatulaPos.y + spatulaSize.height,
+                vx: (Math.random() - 0.5) * 2,
+                vy: Math.random() * 2 + 2,
+                size: Math.random() * 3 + 2,
+                opacity: 1,
+                rotation: Math.random() * Math.PI * 2
+              });
+            }
+            setParticles(prev => [...prev, ...newParticles]);
+          };
+
+          const updateParticles = () => {
+            setParticles(prev => {
+              const updated = prev.map(p => ({
+                ...p,
+                x: p.x + p.vx,
+                y: p.y + p.vy,
+                vy: p.vy + 0.3,
+                rotation: p.rotation + 0.1,
+                opacity: p.opacity - 0.015
+              }))
+              .filter(p => {
+                if (p.y >= watchGlassPos.y + 10 && 
+                    p.x >= watchGlassPos.x + 10 && 
+                    p.x <= watchGlassPos.x + watchGlassSize.width - 10 &&
+                    p.opacity > 0) {
+                  setMass(m => {
+                    const newMass = Math.min(m + 0.002, targetMass);
+                    return newMass;
+                  });
+                  return false;
+                }
+                return p.y < watchGlassPos.y + 100 && p.opacity > 0;
+              });
+              return updated;
+            });
+          };
+
+          useEffect(() => {
+            const animate = () => {
+              if (isAdding && isSpatulaOverGlass() && isWatchGlassOnScale() && mass < targetMass) {
+                generateParticles();
+              }
+              updateParticles();
+              animationRef.current = requestAnimationFrame(animate);
+            };
+            animationRef.current = requestAnimationFrame(animate);
+            return () => {
+              if (animationRef.current) {
+                cancelAnimationFrame(animationRef.current);
+              }
+            };
+          }, [isAdding, watchGlassPos, spatulaPos, mass]);
+
+          useEffect(() => {
+            const canvas = canvasRef.current;
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // [TODO EL CÓDIGO DE DIBUJO DEL CANVAS - IGUAL QUE ANTES]
+            // Fondo
+            const bgGradient = ctx.createLinearGradient(0, 0, 0, 600);
+            bgGradient.addColorStop(0, '#f0f4f8');
+            bgGradient.addColorStop(1, '#d9e2ec');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, 900, 600);
+
+            ctx.fillStyle = '#e8f0f7';
+            ctx.fillRect(0, 0, 900, 380);
+
+            const tableGradient = ctx.createLinearGradient(0, 380, 0, 600);
+            tableGradient.addColorStop(0, '#9b7e5c');
+            tableGradient.addColorStop(0.5, '#8b6f4f');
+            tableGradient.addColorStop(1, '#7a5f42');
+            ctx.fillStyle = tableGradient;
+            ctx.fillRect(0, 380, 900, 220);
+
+            // FRASCO (simplificado por espacio)
+            const bottleWidth = 80;
+            const bottleHeight = 120;
+            
+            const bottleGradient = ctx.createLinearGradient(
+              bottlePos.x, bottlePos.y + 30,
+              bottlePos.x + bottleWidth, bottlePos.y + 30
+            );
+            bottleGradient.addColorStop(0, 'rgba(180, 100, 30, 0.4)');
+            bottleGradient.addColorStop(0.5, 'rgba(200, 120, 40, 0.6)');
+            bottleGradient.addColorStop(1, 'rgba(180, 100, 30, 0.4)');
+            ctx.fillStyle = bottleGradient;
+            ctx.beginPath();
+            ctx.roundRect(bottlePos.x + 10, bottlePos.y + 30, bottleWidth - 20, bottleHeight - 30, 5);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(120, 80, 60, 0.7)';
+            ctx.beginPath();
+            ctx.roundRect(bottlePos.x + 15, bottlePos.y + 70, bottleWidth - 30, 45, 3);
+            ctx.fill();
+
+            ctx.fillStyle = '#2d3748';
+            ctx.beginPath();
+            ctx.roundRect(bottlePos.x + 15, bottlePos.y + 10, bottleWidth - 30, 25, 3);
+            ctx.fill();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.roundRect(bottlePos.x + 15, bottlePos.y + 40, bottleWidth - 30, 25, 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#1e293b';
+            ctx.font = 'bold 10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Sal de Mohr', bottlePos.x + bottleWidth / 2, bottlePos.y + 50);
+
+            if (isSpatulaInBottle()) {
+              ctx.strokeStyle = '#3b82f6';
+              ctx.lineWidth = 3;
+              ctx.shadowColor = '#3b82f6';
+              ctx.shadowBlur = 15;
+              ctx.setLineDash([5, 5]);
+              ctx.strokeRect(bottlePos.x + 5, bottlePos.y + 5, bottleWidth - 10, bottleHeight - 10);
+              ctx.setLineDash([]);
+              ctx.shadowBlur = 0;
+            }
+
+            // BALANZA
+            const bodyGradient = ctx.createLinearGradient(
+              scalePos.x, scalePos.y + 30,
+              scalePos.x, scalePos.y + 90
+            );
+            bodyGradient.addColorStop(0, '#525d6b');
+            bodyGradient.addColorStop(0.5, '#3d4654');
+            bodyGradient.addColorStop(1, '#2d3542');
+            ctx.fillStyle = bodyGradient;
+            ctx.beginPath();
+            ctx.roundRect(scalePos.x + 35, scalePos.y + 30, scaleSize.width - 70, 60, 8);
+            ctx.fill();
+
+            const platformGradient = ctx.createLinearGradient(
+              scalePos.x, scalePos.y - 8,
+              scalePos.x, scalePos.y + scaleSize.height + 5
+            );
+            platformGradient.addColorStop(0, '#f1f5f9');
+            platformGradient.addColorStop(0.3, '#e2e8f0');
+            platformGradient.addColorStop(0.7, '#cbd5e0');
+            platformGradient.addColorStop(1, '#94a3b8');
+            ctx.fillStyle = platformGradient;
+            ctx.beginPath();
+            ctx.roundRect(scalePos.x, scalePos.y - 5, scaleSize.width, scaleSize.height + 10, 4);
+            ctx.fill();
+
+            // Display
+            const displayX = scalePos.x + 20;
+            const displayY = scalePos.y + 38;
+            const displayWidth = 160;
+            const displayHeight = 45;
+
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.roundRect(displayX, displayY, displayWidth, displayHeight, 6);
+            ctx.fill();
+
+            const lcdGradient = ctx.createLinearGradient(displayX, displayY, displayX, displayY + displayHeight);
+            lcdGradient.addColorStop(0, '#0f1419');
+            lcdGradient.addColorStop(1, '#1a2027');
+            ctx.fillStyle = lcdGradient;
+            ctx.beginPath();
+            ctx.roundRect(displayX + 4, displayY + 4, displayWidth - 8, displayHeight - 8, 4);
+            ctx.fill();
+
+            ctx.font = 'bold 28px "Courier New", monospace';
+            ctx.fillStyle = '#00ff88';
+            ctx.shadowColor = '#00ff88';
+            ctx.shadowBlur = 10;
+            ctx.textAlign = 'right';
+            ctx.fillText(`${mass.toFixed(4)}`, displayX + displayWidth - 35, displayY + 30);
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('g', displayX + displayWidth - 12, displayY + 30);
+            ctx.shadowBlur = 0;
+
+            // VIDRIO DE RELOJ
+            const glassGradient = ctx.createRadialGradient(
+              watchGlassPos.x + watchGlassSize.width / 2,
+              watchGlassPos.y + watchGlassSize.height / 2, 0,
+              watchGlassPos.x + watchGlassSize.width / 2,
+              watchGlassPos.y + watchGlassSize.height / 2,
+              watchGlassSize.width / 2
+            );
+            glassGradient.addColorStop(0, 'rgba(200, 230, 255, 0.3)');
+            glassGradient.addColorStop(0.7, 'rgba(220, 240, 255, 0.5)');
+            glassGradient.addColorStop(1, 'rgba(180, 220, 255, 0.4)');
+            
+            ctx.fillStyle = glassGradient;
+            ctx.beginPath();
+            ctx.ellipse(
+              watchGlassPos.x + watchGlassSize.width / 2,
+              watchGlassPos.y + watchGlassSize.height / 2,
+              watchGlassSize.width / 2,
+              watchGlassSize.height / 2, 0, 0, Math.PI * 2
+            );
+            ctx.fill();
+
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // ESPÁTULA
+            const handleGradient = ctx.createLinearGradient(
+              spatulaPos.x + 40, spatulaPos.y,
+              spatulaPos.x + 40, spatulaPos.y + spatulaSize.height
+            );
+            handleGradient.addColorStop(0, '#8b7355');
+            handleGradient.addColorStop(1, '#6b5644');
+            ctx.fillStyle = handleGradient;
+            ctx.beginPath();
+            ctx.roundRect(spatulaPos.x + 35, spatulaPos.y, 45, spatulaSize.height, 3);
+            ctx.fill();
+
+            const bladeGradient = ctx.createLinearGradient(
+              spatulaPos.x, spatulaPos.y,
+              spatulaPos.x, spatulaPos.y + spatulaSize.height
+            );
+            bladeGradient.addColorStop(0, '#e2e8f0');
+            bladeGradient.addColorStop(0.5, '#cbd5e0');
+            bladeGradient.addColorStop(1, '#94a3b8');
+            ctx.fillStyle = bladeGradient;
+            ctx.beginPath();
+            ctx.moveTo(spatulaPos.x, spatulaPos.y + spatulaSize.height / 2);
+            ctx.lineTo(spatulaPos.x + 35, spatulaPos.y + 2);
+            ctx.lineTo(spatulaPos.x + 40, spatulaPos.y + 2);
+            ctx.lineTo(spatulaPos.x + 40, spatulaPos.y + spatulaSize.height - 2);
+            ctx.lineTo(spatulaPos.x + 35, spatulaPos.y + spatulaSize.height - 2);
+            ctx.closePath();
+            ctx.fill();
+
+            if (isSpatulaInBottle() && isAdding) {
+              ctx.fillStyle = 'rgba(139, 92, 54, 0.8)';
+              ctx.beginPath();
+              ctx.ellipse(spatulaPos.x + 15, spatulaPos.y + spatulaSize.height / 2, 12, 5, 0, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Partículas
+            particles.forEach(p => {
+              ctx.save();
+              ctx.translate(p.x, p.y);
+              ctx.rotate(p.rotation);
+
+              const particleGradient = ctx.createRadialGradient(-p.size/4, -p.size/4, 0, 0, 0, p.size);
+              particleGradient.addColorStop(0, `rgba(230, 170, 120, ${p.opacity})`);
+              particleGradient.addColorStop(0.5, `rgba(200, 140, 90, ${p.opacity})`);
+              particleGradient.addColorStop(1, `rgba(139, 92, 54, ${p.opacity * 0.8})`);
+              
+              ctx.fillStyle = particleGradient;
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+              ctx.fill();
+
+              ctx.restore();
+            });
+
+            // Indicadores
+            if (isWatchGlassOnScale()) {
+              ctx.strokeStyle = '#10b981';
+              ctx.lineWidth = 6;
+              ctx.shadowColor = '#10b981';
+              ctx.shadowBlur = 20;
+              ctx.setLineDash([10, 10]);
+              ctx.strokeRect(
+                scalePos.x - 15, scalePos.y - 15,
+                scaleSize.width + 30, scaleSize.height + 30
+              );
+              ctx.setLineDash([]);
+              ctx.shadowBlur = 0;
+            }
+
+            ctx.textAlign = 'left';
+          }, [watchGlassPos, spatulaPos, particles, mass, isAdding]);
+
+          const handleMouseDown = (e) => {
+            const rect = canvasRef.current.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const distToGlass = Math.sqrt(
+              Math.pow(mouseX - (watchGlassPos.x + watchGlassSize.width / 2), 2) +
+              Math.pow(mouseY - (watchGlassPos.y + watchGlassSize.height / 2), 2)
+            );
+            
+            if (distToGlass < watchGlassSize.width / 2) {
+              setIsDraggingGlass(true);
+              setDragOffset({ x: mouseX - watchGlassPos.x, y: mouseY - watchGlassPos.y });
+              return;
+            }
+
+            if (mouseX >= spatulaPos.x && mouseX <= spatulaPos.x + spatulaSize.width &&
+                mouseY >= spatulaPos.y && mouseY <= spatulaPos.y + spatulaSize.height) {
+              setIsDraggingSpatula(true);
+              setDragOffset({ x: mouseX - spatulaPos.x, y: mouseY - spatulaPos.y });
+            }
+          };
+
+          const handleMouseMove = (e) => {
+            if (!isDraggingGlass && !isDraggingSpatula) return;
+            const rect = canvasRef.current.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            if (isDraggingGlass) {
+              setWatchGlassPos({
+                x: Math.max(0, Math.min(mouseX - dragOffset.x, 900 - watchGlassSize.width)),
+                y: Math.max(0, Math.min(mouseY - dragOffset.y, 550 - watchGlassSize.height))
+              });
+            }
+
+            if (isDraggingSpatula) {
+              setSpatulaPos({
+                x: Math.max(0, Math.min(mouseX - dragOffset.x, 900 - spatulaSize.width)),
+                y: Math.max(0, Math.min(mouseY - dragOffset.y, 550 - spatulaSize.height))
+              });
+            }
+          };
+
+          const handleMouseUp = () => {
+            setIsDraggingGlass(false);
+            setIsDraggingSpatula(false);
+          };
+
+          const toggleAdding = () => {
+            if (isWatchGlassOnScale() && mass < targetMass && isSpatulaInBottle()) {
+              setIsAdding(!isAdding);
+            }
+          };
+
+          const reset = () => {
+            setMass(0);
+            setIsAdding(false);
+            setParticles([]);
+            setIsComplete(false);
+            setWatchGlassPos({ x: 100, y: 200 });
+            setSpatulaPos({ x: 200, y: 150 });
+          };
+
+          const canStartAdding = isWatchGlassOnScale() && isSpatulaInBottle();
+
+          return (
+            <div className="w-full h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 p-6 flex flex-col items-center">
+              <div className="mb-4 text-center">
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  ⚖️ Simulador de Pesado - Sal de Mohr
+                </h1>
+                <p className="text-indigo-200 text-sm">
+                  Rango: 0.2 - 5.0 g | Usa el mouse para arrastrar
+                </p>
+              </div>
+
+              <div className="relative">
+                <canvas
+                  ref={canvasRef}
+                  width={900}
+                  height={600}
+                  className="rounded-2xl shadow-2xl cursor-grab active:cursor-grabbing border-4 border-indigo-400/30"
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseUp}
+                />
+
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-slate-800/90 backdrop-blur-md px-6 py-3 rounded-full shadow-2xl border-2 border-indigo-400/30">
+                  <div className="flex items-center gap-3">
+                    <span className="text-white font-semibold">Masa Pesada:</span>
+                    <span className="text-cyan-300 font-bold text-2xl">{mass.toFixed(4)} g</span>
+                  </div>
+                </div>
+
+                {!isWatchGlassOnScale() && (
+                  <div className="absolute bottom-4 left-4 bg-amber-400 text-slate-900 px-6 py-3 rounded-xl shadow-2xl font-bold text-sm">
+                    📍 Coloca el vidrio de reloj sobre la balanza
+                  </div>
+                )}
+
+                {isWatchGlassOnScale() && !isSpatulaInBottle() && (
+                  <div className="absolute bottom-4 left-4 bg-blue-400 text-white px-6 py-3 rounded-xl shadow-2xl font-bold text-sm">
+                    🥄 Lleva la espátula al frasco
+                  </div>
+                )}
+
+                {canStartAdding && !isAdding && mass < minMass && (
+                  <div className="absolute bottom-4 left-4 bg-green-400 text-white px-6 py-3 rounded-xl shadow-2xl font-bold text-sm animate-pulse">
+                    ✓ Presiona "Agregar Sal"
+                  </div>
+                )}
+
+                {mass >= minMass && (
+                  <div className="absolute bottom-4 left-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-2xl font-bold text-sm">
+                    ✅ Masa válida para continuar
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 flex gap-4">
+                <button
+                  onClick={toggleAdding}
+                  disabled={!canStartAdding || mass >= targetMass}
+                  className={`flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all ${
+                    canStartAdding && mass < targetMass
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-xl'
+                      : 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  {isAdding ? (<><PauseIcon /> Detener</>) : (<><PlayIcon /> Agregar Sal</>)}
+                </button>
+
+                <button
+                  onClick={reset}
+                  className="flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold text-lg transition-all shadow-xl"
+                >
+                  <RotateIcon /> Reiniciar
+                </button>
+              </div>
+
+              <div className="mt-6 bg-slate-800/80 backdrop-blur-md p-4 rounded-xl max-w-2xl text-slate-200 text-sm">
+                <p className="font-semibold text-white mb-2">📋 Instrucciones:</p>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Arrastra el <span className="text-cyan-400">vidrio de reloj</span> sobre la balanza</li>
+                  <li>Lleva la <span className="text-amber-400">espátula</span> al frasco</li>
+                  <li>Presiona "Agregar Sal" y mueve la espátula sobre el vidrio</li>
+                  <li>Pesa entre 0.2 y 5.0 g según tu criterio</li>
+                  <li>Cierra esta ventana y registra la masa en Streamlit</li>
+                </ol>
+              </div>
+            </div>
+          );
+        };
+
+        ReactDOM.render(<SaltWeighingSimulator />, document.getElementById('root'));
+    </script>
+</body>
+</html>
+            """
+            
+            import webbrowser
+            import tempfile
+            import os
+            
+            try:
+                with tempfile.NamedTemporaryFile('w', delete=False, suffix='.html', 
+                                                encoding='utf-8') as f:
+                    f.write(SIMULADOR_PESADO)
+                    temp_path = f.name
+                
+                webbrowser.open('file://' + os.path.abspath(temp_path))
+                st.success("✅ Simulador abierto en nueva ventana del navegador")
+                st.info("💡 Después de pesar, registra la masa abajo")
+                st.balloons()
+            except Exception as e:
+                st.error(f"Error al abrir simulador: {e}")
+    
+    st.markdown("---")
+    
+    # Registro de masa pesada
+    st.markdown("### 📝 Registro de Masa Pesada")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        masa_pesada = st.number_input(
+            "Masa pesada en el simulador (g):",
+            min_value=0.20,
+            max_value=5.00,
+            value=st.session_state.masa_sal_mohr if st.session_state.masa_sal_mohr else None,
+            step=0.0001,
+            format="%.4f",
+            help="Ingresa exactamente la masa que obtuviste en el simulador"
+        )
+        
+        if masa_pesada:
+            st.session_state.masa_sal_mohr = masa_pesada
+            st.success(f"✅ Masa registrada: {masa_pesada:.4f} g")
+    
+    with col2:
+        if st.session_state.masa_sal_mohr:
+            st.metric(
+                "Masa Confirmada",
+                f"{st.session_state.masa_sal_mohr:.4f} g",
+                help="Esta masa se usará para los cálculos"
+            )
+            
+            # Validación
+            if st.session_state.masa_sal_mohr < 0.2:
+                st.warning("⚠️ Masa muy baja (< 0.2 g)")
+            elif st.session_state.masa_sal_mohr > 5.0:
+                st.error("❌ Masa excede el máximo (> 5.0 g)")
+            else:
+                st.success("✅ Masa en rango válido")
+    
+    # Sección de aforo
+    if st.session_state.masa_sal_mohr:
+        st.markdown("---")
+        st.markdown("### 🧪 Paso 2: Aforo del Patrón Madre")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Transferencia al Balón Aforado")
+            st.info("Transfiere cuantitativamente la Sal de Mohr pesada a un balón aforado")
+            
+            volumen_balon = st.selectbox(
+                "Selecciona el volumen del balón aforado (mL):",
+                [None, 50, 100, 250, 500, 1000],
+                format_func=lambda x: "Seleccione..." if x is None else f"{x} mL"
+            )
+            
+            if volumen_balon:
+                st.session_state.volumen_aforo_patron = volumen_balon
+                st.success(f"✅ Balón de {volumen_balon} mL seleccionado")
+        
+        with col2:
+            if st.session_state.volumen_aforo_patron:
+                st.markdown("#### Aforar hasta la marca")
+                st.info("Completa con agua destilada hasta la marca de aforo, usando una piseta")
+                
+                # Imagen ilustrativa (emoji)
+                st.markdown("""
+                <div style="text-align: center; font-size: 80px;">
+                    🧪 💧
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Cálculos
+    if st.session_state.masa_sal_mohr and st.session_state.volumen_aforo_patron:
+        st.markdown("---")
+        st.markdown("### 🧮 Cálculos Automáticos")
+        
+        conc_patron_madre = calcular_concentracion_patron_madre(
+            st.session_state.masa_sal_mohr,
+            st.session_state.volumen_aforo_patron
+        )
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Masa Sal de Mohr", f"{st.session_state.masa_sal_mohr:.4f} g")
+        
+        with col2:
+            st.metric("Volumen Aforo", f"{st.session_state.volumen_aforo_patron} mL")
+        
+        with col3:
+            st.metric(
+                "Concentración Patrón Madre",
+                f"{conc_patron_madre:.2f} mg/L",
+                help="Concentración de Fe en la solución patrón madre"
+            )
+        
+        # Mostrar cálculos detallados
+        with st.expander("📐 Ver cálculos detallados"):
+            mm_sal = 392.14
+            mm_fe = 55.845
+            moles_sal = st.session_state.masa_sal_mohr / mm_sal
+            masa_fe_mg = moles_sal * mm_fe * 1000
+            
+            st.markdown(f"""
+            **Paso 1: Cálculo de moles de Sal de Mohr**
+            
+            MM (NH₄)₂Fe(SO₄)₂·6H₂O = 392.14 g/mol
+            
+            n(Sal) = {st.session_state.masa_sal_mohr:.4f} g ÷ 392.14 g/mol = **{moles_sal:.6f} mol**
+            
+            ---
+            
+            **Paso 2: Moles de Fe (relación 1:1)**
+            
+            n(Fe) = **{moles_sal:.6f} mol**
+            
+            ---
+            
+            **Paso 3: Masa de Fe**
+            
+            MM Fe = 55.845 g/mol
+            
+            masa(Fe) = {moles_sal:.6f} mol × 55.845 g/mol = {moles_sal * mm_fe:.6f} g
+            
+            masa(Fe) = **{masa_fe_mg:.4f} mg**
+            
+            ---
+            
+            **Paso 4: Concentración en mg/L**
+            
+            C = masa(Fe) / Volumen(L)
+            
+            C = {masa_fe_mg:.4f} mg ÷ {st.session_state.volumen_aforo_patron/1000:.3f} L
+            
+            C = **{conc_patron_madre:.2f} mg/L**
+            """)
+        
+        # Verificar si es adecuado para hacer patrones
+        st.markdown("### 📊 Evaluación de la Concentración")
+        
+        if conc_patron_madre < 50:
+            st.warning("""
+            ⚠️ **La concentración del patrón madre es BAJA (< 50 mg/L)**
+            
+            - Será **difícil** preparar patrones en el rango 1-5 mg/L
+            - Necesitarás tomar alícuotas muy grandes
+            - Puede haber mayor error en las diluciones
+            
+            💡 **Recomendación:** 
+            - Pesar más Sal de Mohr, o
+            - Usar un balón de menor volumen
+            """)
+        elif conc_patron_madre > 500:
+            st.info("""
+            💡 **La concentración del patrón madre es ALTA (> 500 mg/L)**
+            
+            - Necesitarás tomar alícuotas muy pequeñas (< 1 mL)
+            - Debes usar **micropipetas** o pipetas de precisión
+            - El error relativo puede aumentar con volúmenes muy pequeños
+            
+            ✅ **Esto es aceptable** si tienes el equipo adecuado
+            """)
+        else:
+            st.success("""
+            ✅ **Concentración del patrón madre ÓPTIMA (50-500 mg/L)**
+            
+            - Podrás preparar fácilmente patrones en el rango 1-5 mg/L
+            - Las alícuotas serán de tamaño manejable
+            - Menor error en las diluciones
+            
+            🎯 Puedes continuar con la preparación de la curva de calibración
+            """)
+        
+        st.session_state.conc_patron_madre = conc_patron_madre
+        
+        # Botón para continuar
+        st.markdown("---")
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        
+        with col2:
+            if st.button("➡️ Continuar a Curva de Calibración", type="primary", use_container_width=True):
+                st.success("✅ Patrón madre preparado correctamente")
+                st.info("👉 Ve a la **Etapa 2: Curva de Calibración** en el menú lateral")
+                st.balloons()def mostrar_patron_madre():
+    st.markdown("## 1️⃣ Preparación de Solución Patrón Madre de Fe")
+    
+    st.markdown("""
+    <div class="section-box">
+    <h3>📋 Objetivo</h3>
+    Preparar una solución patrón madre de Fe a partir de Sal de Mohr 
+    [(NH₄)₂Fe(SO₄)₂·6H₂O] para posteriormente preparar los patrones de la curva de calibración.
+    </div>
+    """, unsafe_allow_html=True)
+    
     st.markdown("### 🎮 Simulador Interactivo de Pesado")
     
     # Simulador embebido
@@ -771,8 +1528,8 @@ def mostrar_patron_madre():
         # Botón para continuar
         if st.button("➡️ Continuar a Curva de Calibración", type="primary"):
             st.success("✅ Patrón madre preparado correctamente. Ve a la siguiente etapa en el menú lateral.")
-            st.balloons()
-"""LABORATORIO VIRTUAL - QUÍMICA ANALÍTICA
+            st.balloons()"""
+LABORATORIO VIRTUAL - QUÍMICA ANALÍTICA
 Práctica: Determinación de Hierro en Vinos por Absorción Atómica
 Curso: QU-0301 Análisis Cuantitativo
 Universidad de Costa Rica
