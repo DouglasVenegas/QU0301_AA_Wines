@@ -755,8 +755,13 @@ def mostrar_patron_madre():
             if st.button("➡️ Continuar a Curva de Calibración", type="primary", use_container_width=True):
                 st.success("✅ Patrón madre preparado correctamente")
                 st.info("👉 Ve a la **Etapa 2: Curva de Calibración** en el menú lateral")
-                st.balloons()def mostrar_patron_madre(): pass
-    st.markdown("## 1️⃣ Preparación de Solución Patrón Madre de Fe")
+                st.balloons()
+        
+        def mostrar_patron_madre():
+                    pass
+        
+        st.markdown("## 1️⃣ Preparación de Solución Patrón Madre de Fe")
+
     
     st.markdown("""
     <div class="section-box">
