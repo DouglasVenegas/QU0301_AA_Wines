@@ -1533,8 +1533,8 @@ def mostrar_patron_madre():
         # Botón para continuar
         if st.button("➡️ Continuar a Curva de Calibración", type="primary"):
             st.success("✅ Patrón madre preparado correctamente. Ve a la siguiente etapa en el menú lateral.")
-            st.balloons()"""
-LABORATORIO VIRTUAL - QUÍMICA ANALÍTICA
+            st.balloons()
+"""LABORATORIO VIRTUAL - QUÍMICA ANALÍTICA
 Práctica: Determinación de Hierro en Vinos por Absorción Atómica
 Curso: QU-0301 Análisis Cuantitativo
 Universidad de Costa Rica
