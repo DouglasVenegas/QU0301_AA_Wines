@@ -853,6 +853,301 @@ def mostrar_resultados():
     sstot = np.sum((y - ybar)**2)
     r2 = ssreg / sstot
     
-    # Mostrar ecuación
-    st.markdown(f"""
-    **Ecuación de la recta:**
+    # Mostrar ecuación (CORREGIDO - sin f-string multilínea problemático)
+    st.markdown("**Ecuación de la recta:**")
+    st.markdown(f"**A = {z[0]:.4f} × C + {z[1]:.4f}**")
+    st.markdown(f"**Coeficiente de determinación:** R² = {r2:.4f}")
+    
+    # Gráfico mejorado
+    fig = go.Figure()
+    
+    # Puntos experimentales
+    fig.add_trace(go.Scatter(
+        x=x,
+        y=y,
+        mode='markers',
+        name='Patrones',
+        marker=dict(size=10, color='red')
+    ))
+    
+    # Línea de regresión
+    x_line = np.linspace(min(x), max(x), 100)
+    y_line = p(x_line)
+    
+    fig.add_trace(go.Scatter(
+        x=x_line,
+        y=y_line,
+        mode='lines',
+        name='Regresión lineal',
+        line=dict(color='blue', dash='dash')
+    ))
+    
+    # Muestra (si existe)
+    if 'muestra' in st.session_state.mediciones_aa:
+        abs_muestra = st.session_state.mediciones_aa['muestra']['absorbancia']
+        conc_muestra = st.session_state.mediciones_aa['muestra']['concentracion_diluida']
+        
+        fig.add_trace(go.Scatter(
+            x=[conc_muestra],
+            y=[abs_muestra],
+            mode='markers',
+            name='Muestra',
+            marker=dict(size=15, color='green', symbol='star')
+        ))
+    
+    fig.update_layout(
+        title='Curva de Calibración para Fe por AA',
+        xaxis_title='Concentración (mg/L)',
+        yaxis_title='Absorbancia',
+        hovermode='closest'
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Evaluación de la curva
+    if r2 >= 0.995:
+        st.success(f"✅ Excelente linealidad (R² = {r2:.4f})")
+    elif r2 >= 0.99:
+        st.info(f"✓ Buena linealidad (R² = {r2:.4f})")
+    else:
+        st.warning(f"⚠️ Linealidad aceptable (R² = {r2:.4f}) - Revisa los patrones")
+    
+    # Cálculo de concentración de la muestra
+    if 'muestra' in st.session_state.mediciones_aa:
+        st.markdown("---")
+        st.markdown("### 🧮 Cálculo de Concentración en la Muestra")
+        
+        abs_muestra = st.session_state.mediciones_aa['muestra']['absorbancia']
+        vino_nombre = st.session_state.mediciones_aa['muestra']['vino']
+        
+        # Calcular concentración a partir de la curva
+        conc_calculada_diluida = (abs_muestra - z[1]) / z[0]
+        
+        # Factor de dilución
+        fd = st.session_state.volumen_aforo_muestra / st.session_state.alicuota_vino
+        
+        # Concentración en el vino original
+        conc_vino_original = conc_calculada_diluida * fd
+        
+        # Concentración real del vino
+        conc_real = VINOS_DATABASE[vino_nombre]['concentracion_fe']
+        
+        # Error relativo
+        error_relativo = abs((conc_vino_original - conc_real) / conc_real) * 100
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Absorbancia Medida", f"{abs_muestra:.4f}")
+        
+        with col2:
+            st.metric("Conc. en Dilución", f"{conc_calculada_diluida:.3f} mg/L")
+        
+        with col3:
+            st.metric("Factor de Dilución", f"{fd:.2f}x")
+        
+        st.markdown("---")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric(
+                "Concentración Calculada\n(Vino original)",
+                f"{conc_vino_original:.2f} mg/L",
+                help="Concentración de Fe calculada en el vino sin diluir"
+            )
+        
+        with col2:
+            st.metric(
+                "Concentración Real",
+                f"{conc_real:.2f} mg/L",
+                help="Valor real de Fe en el vino"
+            )
+        
+        with col3:
+            if error_relativo < 5:
+                st.metric("Error Relativo", f"{error_relativo:.2f}%")
+                st.success("✅ Excelente precisión")
+            elif error_relativo < 10:
+                st.metric("Error Relativo", f"{error_relativo:.2f}%")
+                st.info("✓ Buena precisión")
+            else:
+                st.metric("Error Relativo", f"{error_relativo:.2f}%")
+                st.warning("⚠️ Error alto - Revisa el procedimiento")
+        
+        # Análisis detallado
+        st.markdown("---")
+        st.markdown("### 📝 Análisis del Resultado")
+        
+        with st.expander("Ver cálculos detallados", expanded=True):
+            st.markdown(f"""
+**Paso 1: Cálculo de concentración en la dilución**
+
+Usando la ecuación de la recta:
+
+C = (A - b) / m
+
+C = ({abs_muestra:.4f} - {z[1]:.4f}) / {z[0]:.4f} = {conc_calculada_diluida:.3f} mg/L
+
+---
+
+**Paso 2: Corrección por factor de dilución**
+
+C_original = C_diluida × FD
+
+C_original = {conc_calculada_diluida:.3f} × {fd:.2f} = {conc_vino_original:.2f} mg/L
+
+---
+
+**Paso 3: Evaluación del resultado**
+
+- Vino analizado: **{vino_nombre}**
+- Concentración calculada: **{conc_vino_original:.2f} mg/L**
+- Concentración real: **{conc_real:.2f} mg/L**
+- Error relativo: **{error_relativo:.2f}%**
+            """)
+        
+        # Recomendaciones
+        if error_relativo > 10:
+            st.markdown("#### 💡 Posibles causas del error elevado:")
+            
+            conc_diluida = st.session_state.mediciones_aa['muestra']['concentracion_diluida']
+            
+            if not verificar_rango_optimo(conc_diluida):
+                if conc_diluida < 1.0:
+                    st.warning("""
+- ❌ La dilución fue **excesiva** (concentración < 1 mg/L)
+- 💡 Recomendación: Usar un factor de dilución menor
+- 📊 La absorbancia quedó por debajo del rango óptimo de la curva
+                    """)
+                else:
+                    st.warning("""
+- ❌ La dilución fue **insuficiente** (concentración > 5 mg/L)
+- 💡 Recomendación: Usar un factor de dilución mayor
+- 📊 La absorbancia quedó por encima del rango óptimo de la curva
+                    """)
+            
+            if r2 < 0.995:
+                st.warning("""
+- ❌ La curva de calibración tiene **baja linealidad**
+- 💡 Recomendación: Asegurar que todos los patrones estén en rango 1-5 mg/L
+- 📊 Algunos patrones pueden estar fuera del rango óptimo
+                """)
+    
+    # Tabla resumen final
+    st.markdown("---")
+    st.markdown("### 📊 Tabla Resumen de Resultados")
+    
+    resumen_data = {
+        "Parámetro": [
+            "Masa Sal de Mohr",
+            "Volumen Patrón Madre",
+            "Conc. Patrón Madre",
+            "Número de Patrones",
+            "R² de la Curva",
+            "Pendiente (m)",
+            "Intercepto (b)",
+        ],
+        "Valor": [
+            f"{st.session_state.masa_sal_mohr:.4f} g" if st.session_state.masa_sal_mohr else "No registrado",
+            f"{st.session_state.volumen_aforo_patron} mL" if st.session_state.volumen_aforo_patron else "No seleccionado",
+            f"{st.session_state.conc_patron_madre:.2f} mg/L" if st.session_state.conc_patron_madre else "No calculado",
+            f"{len(st.session_state.patrones_preparados)}",
+            f"{r2:.4f}",
+            f"{z[0]:.4f}",
+            f"{z[1]:.4f}",
+        ]
+    }
+    
+    if 'muestra' in st.session_state.mediciones_aa:
+        resumen_data["Parámetro"].extend([
+            "Vino Analizado",
+            "Alícuota Vino",
+            "Factor de Dilución",
+            "Absorbancia Muestra",
+            "Conc. Calculada",
+            "Conc. Real",
+            "Error Relativo"
+        ])
+        resumen_data["Valor"].extend([
+            vino_nombre,
+            f"{st.session_state.alicuota_vino} mL",
+            f"{fd:.2f}x",
+            f"{abs_muestra:.4f}",
+            f"{conc_vino_original:.2f} mg/L",
+            f"{conc_real:.2f} mg/L",
+            f"{error_relativo:.2f}%"
+        ])
+    
+    df_resumen = pd.DataFrame(resumen_data)
+    st.table(df_resumen)
+    
+    # Botón de descarga
+    csv = df_resumen.to_csv(index=False)
+    st.download_button(
+        label="📥 Descargar Resultados (CSV)",
+        data=csv,
+        file_name="resultados_fe_vinos_aa.csv",
+        mime="text/csv"
+    )
+# ============================================================================
+# APLICACIÓN PRINCIPAL
+# ============================================================================
+
+def main():
+    # Header
+    st.markdown("""
+        <div class="main-header">
+            <h1>🍷 LABORATORIO VIRTUAL - QUÍMICA ANALÍTICA</h1>
+            <h3>Determinación de Hierro en Vinos por Absorción Atómica</h3>
+            <p>QU-0301 Análisis Cuantitativo | Universidad de Costa Rica</p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Sidebar
+    with st.sidebar:
+        st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Escudo_UCR.svg/1200px-Escudo_UCR.svg.png", width=150)
+        st.markdown("### 👨‍🏫 Información del Curso")
+        st.info("""
+        **Profesor:**  
+        Douglas Venegas González  
+        douglas.venegas@ucr.ac.cr
+        
+        **Curso:**  
+        QU-0301 Análisis Cuantitativo
+        """)
+        
+        st.markdown("### 📚 Navegación")
+        pagina = st.radio(
+            "Seleccione una etapa:",
+            [
+                "🏠 Inicio",
+                "1️⃣ Preparación Patrón Madre",
+                "2️⃣ Curva de Calibración", 
+                "3️⃣ Preparación de Muestra",
+                "4️⃣ Medición AA",
+                "5️⃣ Resultados"
+            ],
+            key="navegacion"
+        )
+
+    # Páginas
+    if pagina == "🏠 Inicio":
+        mostrar_inicio()
+    elif pagina == "1️⃣ Preparación Patrón Madre":
+        mostrar_patron_madre()
+    elif pagina == "2️⃣ Curva de Calibración":
+        mostrar_curva_calibracion()
+    elif pagina == "3️⃣ Preparación de Muestra":
+        mostrar_preparacion_muestra()
+    elif pagina == "4️⃣ Medición AA":
+        mostrar_medicion_aa()
+    elif pagina == "5️⃣ Resultados":
+        mostrar_resultados()
+
+# ============================================================================
+# EJECUTAR APLICACIÓN
+# ============================================================================
+
+if __name__ == "__main__":
+    main()
