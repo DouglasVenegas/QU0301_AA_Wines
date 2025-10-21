@@ -309,7 +309,7 @@ def mostrar_patron_madre():
     st.markdown("### 🎮 Simulador Avanzado de Pesado")
     
     # URL del simulador externo - ¡CAMBIAR POR TU URL REAL!
-    URL_SIMULADOR = "https://github.com/DouglasVenegas/simulador-pesado"  # ← CAMBIA ESTO
+    URL_SIMULADOR = "https://github.com/DouglasVenegas/simulador-pesado/blob/main/index.html"  # ← CAMBIA ESTO
     
     col1, col2 = st.columns([1, 1])
     
