@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚖️ Simulador de Pesado - UCR Química</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .tooltip {
+            position: relative;
+        }
+        .tooltip-text {
+            visibility: hidden;
+            width: 200px;
+            background-color: black;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-purple-900 to-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">⚖️ Simulador de Pesado</h1>
+            <p class="text-blue-200 text-lg">Sal de Mohr - Laboratorio Virtual UCR</p>
+            <div class="glass-effect rounded-lg p-4 mt-4 max-w-2xl mx-auto">
+                <p class="text-white font-semibold">🎯 Objetivo: Pesar entre 0.2g y 5.0g de Sal de Mohr</p>
+            </div>
+        </div>
+
+        <!-- Área Principal del Simulador -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Panel de Control -->
+            <div class="glass-effect rounded-xl p-6">
+                <h2 class="text-xl font-bold text-white mb-4">🎮 Controles</h2>
+                
+                <div class="space-y-4">
+                    <!-- Selector de Instrumento -->
+                    <div>
+                        <label class="text-white block mb-2">🔧 Instrumento:</label>
+                        <select id="instrumento" class="w-full p-2 rounded bg-gray-800 text-white">
+                            <option value="balanza">Balanza Analítica (±0.0001g)</option>
+                            <option value="bascula">Báscula de Precisión (±0.001g)</option>
+                        </select>
+                    </div>
+
+                    <!-- Control de Precisión -->
+                    <div>
+                        <label class="text-white block mb-2">🎯 Precisión:</label>
+                        <input type="range" id="precision" min="1" max="10" value="7" class="w-full">
+                        <div class="flex justify-between text-white text-sm">
+                            <span>Baja</span>
+                            <span>Alta</span>
+                        </div>
+                    </div>
+
+                    <!-- Modo de Pesado -->
+                    <div>
+                        <label class="text-white block mb-2">⚡ Modo:</label>
+                        <div class="flex space-x-2">
+                            <button id="modoManual" class="flex-1 bg-blue-600 text-white py-2 rounded">Manual</button>
+                            <button id="modoAuto" class="flex-1 bg-gray-700 text-white py-2 rounded">Automático</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Indicadores -->
+                <div class="mt-6 space-y-3">
+                    <div class="flex justify-between text-white">
+                        <span>⚖️ Estabilidad:</span>
+                        <span id="estabilidad" class="text-green-400">✓ Estable</span>
+                    </div>
+                    <div class="flex justify-between text-white">
+                        <span>🌡️ Temperatura:</span>
+                        <span id="temperatura">23.5°C</span>
+                    </div>
+                    <div class="flex justify-between text-white">
+                        <span>💨 Corrientes de aire:</span>
+                        <span id="corrientes" class="text-yellow-400">⚠️ Leves</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de Visualización -->
+            <div class="lg:col-span-2 glass-effect rounded-xl p-6">
+                <h2 class="text-xl font-bold text-white mb-4">👁️ Vista del Pesado</h2>
+                
+                <!-- Balanza Visual -->
+                <div class="bg-gray-800 rounded-lg p-6 mb-4 relative">
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">⚖️</div>
+                        <div id="displayMasa" class="text-3xl font-mono text-green-400 bg-black p-4 rounded inline-block">
+                            0.0000 g
+                        </div>
+                    </div>
+                    
+                    <!-- Indicador de Nivel -->
+                    <div class="mt-4 bg-gray-700 rounded-full h-2">
+                        <div id="nivelEstabilidad" class="bg-green-500 h-2 rounded-full w-3/4"></div>
+                    </div>
+                </div>
+
+                <!-- Controles de Pesado -->
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <button id="btnAgregar" class="bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg tooltip">
+                        ➕ Agregar Sal
+                        <span class="tooltip-text">Agrega pequeñas cantidades de Sal de Mohr</span>
+                    </button>
+                    <button id="btnQuitar" class="bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg tooltip">
+                        ➖ Remover
+                        <span class="tooltip-text">Remueve exceso de sal</span>
+                    </button>
+                    <button id="btnTara" class="bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg tooltip">
+                        ⚡ Tara
+                        <span class="tooltip-text">Poner a cero la balanza</span>
+                    </button>
+                </div>
+
+                <!-- Progreso -->
+                <div class="mb-4">
+                    <label class="text-white block mb-2">📊 Progreso hacia masa objetivo (2.5g):</label>
+                    <div class="bg-gray-700 rounded-full h-4">
+                        <div id="progresoMasa" class="bg-gradient-to-r from-blue-500 to-green-500 h-4 rounded-full w-0"></div>
+                    </div>
+                    <div class="flex justify-between text-white text-sm mt-1">
+                        <span>0.0g</span>
+                        <span id="metaMasa">2.5g</span>
+                        <span>5.0g</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resultados y Acciones -->
+        <div class="glass-effect rounded-xl p-6">
+            <h2 class="text-xl font-bold text-white mb-4">💾 Resultados</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Información del Pesado -->
+                <div>
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-white mb-3">📈 Datos del Pesado</h3>
+                        <div class="space-y-2 text-white">
+                            <div class="flex justify-between">
+                                <span>Masa Actual:</span>
+                                <span id="masaActual" class="font-mono">0.0000 g</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Tiempo:</span>
+                                <span id="tiempoPesado" class="font-mono">00:00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Operaciones:</span>
+                                <span id="contadorOps" class="font-mono">0</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Estado:</span>
+                                <span id="estadoPesado" class="text-yellow-400">Listo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones Finales -->
+                <div>
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="text-lg font-semibold text-white mb-3">✅ Finalizar Pesado</h3>
+                        
+                        <div class="space-y-3">
+                            <button id="btnConfirmar" 
+                                    class="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white py-3 rounded-lg font-bold text-lg transition-all disabled:opacity-50"
+                                    disabled>
+                                ✓ Confirmar Masa Actual
+                            </button>
+                            
+                            <button id="btnReiniciar" 
+                                    class="w-full bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-700 hover:to-purple-700 text-white py-2 rounded-lg">
+                                🔄 Reiniciar Simulador
+                            </button>
+
+                            <div id="resultadoFinal" class="hidden mt-3 p-3 bg-green-900 rounded-lg">
+                                <p class="text-white font-semibold text-center">
+                                    ✅ Pesado completado: <span id="masaFinal" class="text-green-300">0.0000 g</span>
+                                </p>
+                                <p class="text-white text-sm text-center mt-1">
+                                    Puedes cerrar esta ventana y registrar la masa en Streamlit
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instrucciones -->
+        <div class="glass-effect rounded-xl p-6 mt-6">
+            <h3 class="text-lg font-semibold text-white mb-3">📋 Instrucciones</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Usa "Agregar Sal" para añadir pequeñas cantidades</li>
+                    <li>Mantén la masa entre 0.2g y 5.0g</li>
+                    <li>La "Tara" pone a cero la balanza</li>
+                </ul>
+                <ul class="list-disc list-inside space-y-1">
+                    <li>Busca una masa estable antes de confirmar</li>
+                    <li>Considera el rango óptimo para tu patrón madre</li>
+                    <li>Registra la masa final en Streamlit</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado del simulador
+        let estado = {
+            masa: 0,
+            tiempoInicio: Date.now(),
+            operaciones: 0,
+            modo: 'manual',
+            estabilidad: 'estable',
+            confirmado: false
+        };
+
+        // Elementos DOM
+        const elementos = {
+            displayMasa: document.getElementById('displayMasa'),
+            masaActual: document.getElementById('masaActual'),
+            masaFinal: document.getElementById('masaFinal'),
+            tiempoPesado: document.getElementById('tiempoPesado'),
+            contadorOps: document.getElementById('contadorOps'),
+            estadoPesado: document.getElementById('estadoPesado'),
+            progresoMasa: document.getElementById('progresoMasa'),
+            resultadoFinal: document.getElementById('resultadoFinal'),
+            btnConfirmar: document.getElementById('btnConfirmar'),
+            btnAgregar: document.getElementById('btnAgregar'),
+            btnQuitar: document.getElementById('btnQuitar'),
+            btnTara: document.getElementById('btnTara'),
+            btnReiniciar: document.getElementById('btnReiniciar')
+        };
+
+        // Inicialización
+        function inicializarSimulador() {
+            actualizarDisplay();
+            iniciarTemporizador();
+            configurarEventos();
+        }
+
+        function configurarEventos() {
+            elementos.btnAgregar.addEventListener('click', () => agregarSal());
+            elementos.btnQuitar.addEventListener('click', () => quitarSal());
+            elementos.btnTara.addEventListener('click', () => hacerTara());
+            elementos.btnConfirmar.addEventListener('click', () => confirmarMasa());
+            elementos.btnReiniciar.addEventListener('click', () => reiniciarSimulador());
+
+            // Habilitar confirmación cuando la masa esté en rango
+            setInterval(() => {
+                const masaValida = estado.masa >= 0.2 && estado.masa <= 5.0;
+                elementos.btnConfirmar.disabled = !masaValida || estado.confirmado;
+            }, 100);
+        }
+
+        function agregarSal() {
+            if (estado.confirmado) return;
+            
+            const precision = parseInt(document.getElementById('precision').value);
+            const incremento = (Math.random() * 0.1 + 0.01) * (precision / 10);
+            
+            estado.masa += incremento;
+            estado.operaciones++;
+            estado.estabilidad = 'inestable';
+            
+            actualizarDisplay();
+            simularInestabilidad();
+            
+            // Partículas visuales
+            crearParticulas('agregar');
+        }
+
+        function quitarSal() {
+            if (estado.confirmado || estado.masa <= 0) return;
+            
+            const precision = parseInt(document.getElementById('precision').value);
+            const decremento = (Math.random() * 0.05 + 0.005) * (precision / 10);
+            
+            estado.masa = Math.max(0, estado.masa - decremento);
+            estado.operaciones++;
+            estado.estabilidad = 'inestable';
+            
+            actualizarDisplay();
+            simularInestabilidad();
+        }
+
+        function hacerTara() {
+            if (estado.confirmado) return;
+            
+            estado.masa = 0;
+            estado.operaciones++;
+            estado.estabilidad = 'estable';
+            
+            actualizarDisplay();
+            elementos.estadoPesado.textContent = 'Tara realizada';
+            elementos.estadoPesado.className = 'text-blue-400';
+        }
+
+        function confirmarMasa() {
+            if (estado.masa < 0.2 || estado.masa > 5.0) {
+                alert('❌ La masa debe estar entre 0.2g y 5.0g');
+                return;
+            }
+            
+            estado.confirmado = true;
+            estado.estabilidad = 'estable';
+            
+            // Mostrar resultado
+            elementos.resultadoFinal.classList.remove('hidden');
+            elementos.masaFinal.textContent = estado.masa.toFixed(4) + ' g';
+            elementos.estadoPesado.textContent = 'Pesado confirmado ✓';
+            elementos.estadoPesado.className = 'text-green-400';
+            
+            // Guardar en localStorage para persistencia
+            localStorage.setItem('ultimoPesado', JSON.stringify({
+                masa: estado.masa,
+                timestamp: Date.now(),
+                operaciones: estado.operaciones
+            }));
+            
+            // Enviar mensaje a la ventana padre (si está embebido)
+            if (window !== window.top) {
+                window.parent.postMessage({
+                    type: 'PESADO_COMPLETADO',
+                    masa: estado.masa,
+                    timestamp: Date.now()
+                }, '*');
+            }
+            
+            alert(`✅ Pesado confirmado: ${estado.masa.toFixed(4)} g\n\nPuedes cerrar esta ventana y registrar la masa en Streamlit.`);
+        }
+
+        function reiniciarSimulador() {
+            estado.masa = 0;
+            estado.operaciones = 0;
+            estado.confirmado = false;
+            estado.estabilidad = 'estable';
+            estado.tiempoInicio = Date.now();
+            
+            elementos.resultadoFinal.classList.add('hidden');
+            actualizarDisplay();
+        }
+
+        function actualizarDisplay() {
+            const masaFormateada = estado.masa.toFixed(4);
+            
+            elementos.displayMasa.textContent = masaFormateada + ' g';
+            elementos.masaActual.textContent = masaFormateada + ' g';
+            
+            // Actualizar progreso
+            const progreso = (estado.masa / 5.0) * 100;
+            elementos.progresoMasa.style.width = Math.min(progreso, 100) + '%';
+            
+            // Actualizar estado
+            elementos.contadorOps.textContent = estado.operaciones;
+            elementos.estadoPesado.textContent = estado.confirmado ? 'Confirmado ✓' : 
+                                               estado.estabilidad === 'estable' ? 'Estable' : 'Inestable';
+            elementos.estadoPesado.className = estado.confirmado ? 'text-green-400' :
+                                             estado.estabilidad === 'estable' ? 'text-green-400' : 'text-yellow-400';
+            
+            // Color del display según la masa
+            if (estado.masa < 0.2) {
+                elementos.displayMasa.className = 'text-3xl font-mono text-red-400 bg-black p-4 rounded inline-block';
+            } else if (estado.masa > 5.0) {
+                elementos.displayMasa.className = 'text-3xl font-mono text-orange-400 bg-black p-4 rounded inline-block';
+            } else {
+                elementos.displayMasa.className = 'text-3xl font-mono text-green-400 bg-black p-4 rounded inline-block';
+            }
+        }
+
+        function simularInestabilidad() {
+            elementos.estadoPesado.textContent = 'Inestable...';
+            elementos.estadoPesado.className = 'text-yellow-400';
+            
+            setTimeout(() => {
+                if (!estado.confirmado) {
+                    estado.estabilidad = 'estable';
+                    elementos.estadoPesado.textContent = 'Estable';
+                    elementos.estadoPesado.className = 'text-green-400';
+                }
+            }, 1500);
+        }
+
+        function iniciarTemporizador() {
+            setInterval(() => {
+                const tiempoTranscurrido = Math.floor((Date.now() - estado.tiempoInicio) / 1000);
+                const minutos = Math.floor(tiempoTranscurrido / 60);
+                const segundos = tiempoTranscurrido % 60;
+                elementos.tiempoPesado.textContent = 
+                    `${minutos.toString().padStart(2, '0')}:${segundos.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function crearParticulas(tipo) {
+            const colores = tipo === 'agregar' ? ['#f59e0b', '#d97706', '#fbbf24'] : ['#ef4444', '#dc2626', '#f87171'];
+            
+            for (let i = 0; i < 5; i++) {
+                const particula = document.createElement('div');
+                particula.className = 'particle';
+                particula.style.width = Math.random() * 8 + 4 + 'px';
+                particula.style.height = particula.style.width;
+                particula.style.background = colores[Math.floor(Math.random() * colores.length)];
+                particula.style.left = (Math.random() * 100) + '%';
+                particula.style.top = '50%';
+                particula.style.opacity = '0.8';
+                
+                document.body.appendChild(particula);
+                
+                // Animación
+                particula.animate([
+                    { transform: 'translateY(0) scale(1)', opacity: 0.8 },
+                    { transform: `translateY(${Math.random() * 100 - 50}px) translateX(${Math.random() * 100 - 50}px) scale(0)`, opacity: 0 }
+                ], {
+                    duration: 1000 + Math.random() * 500,
+                    easing: 'cubic-bezier(0.4, 0, 0.2, 1)'
+                }).onfinish = () => particula.remove();
+            }
+        }
+
+        // Cargar último pesado si existe
+        window.addEventListener('load', () => {
+            const ultimoPesado = localStorage.getItem('ultimoPesado');
+            if (ultimoPesado) {
+                const datos = JSON.parse(ultimoPesado);
+                if (Date.now() - datos.timestamp < 24 * 60 * 60 * 1000) { // 24 horas
+                    estado.masa = datos.masa;
+                    estado.operaciones = datos.operaciones;
+                    actualizarDisplay();
+                }
+            }
+            
+            inicializarSimulador();
+        });
+
+        // Manejar mensajes desde Streamlit
+        window.addEventListener('message', (event) => {
+            if (event.data.type === 'OBTENER_MASA') {
+                window.parent.postMessage({
+                    type: 'MASA_ACTUAL',
+                    masa: estado.masa,
+                    confirmado: estado.confirmado
+                }, '*');
+            }
+        });
+    </script>
+</body>
+</html>
